@@ -1,11 +1,20 @@
 use strict;
 use warnings;
+use utf8;
+use LWP::Simple qw(get);
 use POSIX;
+use EV;
+use AnyEvent;
+use Coro;
+use Coro::AnyEvent;
+use AnyEvent::Socket;
+use Coro::Handle;
+use Coro::AIO;
 use Digest::SHA1 qw(sha1);
 use Encode;
 use Bencode qw(bencode bdecode);
-use LWP::Simple qw(get);
-use Try::Tiny;
+
+
 
 sub file_content {
     my ($file) = @_;
@@ -77,12 +86,10 @@ sub main {
         $piece_channel->put($n);
     }
 
-    tcp_connect $peers->[0]->{'ip'}, $peers->[0]->{'port'}, Coro::rouse_cb;
+    tcp_connect $peers->[1]->{'ip'}, $peers->[1]->{'port'}, Coro::rouse_cb;
     my $fh = unblock +(Coro::rouse_wait)[0];
 
-    my $buf;
-    my $bitfield;
-
+    
     my $pstr = "BitTorrent protocol";
     my $message = pack 'C1A*a8a20a20', length($pstr), $pstr, '',  $info_hash, $peer_id;
     
@@ -92,6 +99,12 @@ sub main {
 	catch {
         terminate;
     };
+
+    my $buf;
+    $fh->sysread($buf, length($message));
+
+    print($buf);
+    
 }
 
 my $torrent_file = 'debian-11.6.0-amd64-netinst.iso.torrent';
