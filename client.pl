@@ -67,7 +67,6 @@ sub main {
       . "&left="
       . $left;
 
-
     my $response = get($tracker_request) or die "Cannot connect to tracker";
     my $tracker_response = bdecode($response);
 
@@ -83,10 +82,8 @@ sub main {
         $piece_channel->put($n);
     }
 
-    print($peers->[1]->{'ip'}, "\n");
     tcp_connect $peers->[1]->{'ip'}, $peers->[1]->{'port'}, Coro::rouse_cb;
     my $fh = unblock +(Coro::rouse_wait)[0];
-
     
     my $pstr = "BitTorrent protocol";
     my $message = pack 'C1A*a8a20a20', length($pstr), $pstr, '',  $info_hash, $peer_id;    
@@ -113,14 +110,13 @@ sub main {
 
         my ($length, $id) = unpack 'Nc', $choke_buf;
         if( $id == 1 ) {
-            print("\n got unchoke ", $length);
+            # got unchoke, code goes here
+        } 
+        elsif( $id == 0 ) {
+            # got choke
+            terminate;
         }
     }
-
-    use Data::Printer;
-    p $buf;
-    p $bitfield;
-    
 }
 
 my $torrent_file = 'debian-11.6.0-amd64-netinst.iso.torrent';
