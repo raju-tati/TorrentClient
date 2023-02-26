@@ -86,24 +86,22 @@ sub main {
         $piece_channel->put($n);
     }
 
+    print($peers->[1]->{'ip'}, "\n");
     tcp_connect $peers->[1]->{'ip'}, $peers->[1]->{'port'}, Coro::rouse_cb;
     my $fh = unblock +(Coro::rouse_wait)[0];
 
     
     my $pstr = "BitTorrent protocol";
-    my $message = pack 'C1A*a8a20a20', length($pstr), $pstr, '',  $info_hash, $peer_id;
+    my $message = pack 'C1A*a8a20a20', length($pstr), $pstr, '',  $info_hash, $peer_id;    
     
-    try {
-        $fh->syswrite($message);
-    } 
-	catch {
-        terminate;
-    };
+    print $fh $message;
 
+    local $/;
     my $buf;
-    $fh->sysread($buf, length($message));
+    $fh->read($buf, length($message));
 
-    print($buf);
+    use Data::Printer;
+    p $buf;
     
 }
 
