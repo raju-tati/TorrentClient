@@ -14,8 +14,6 @@ use Digest::SHA1 qw(sha1);
 use Encode;
 use Bencode qw(bencode bdecode);
 
-
-
 sub file_content {
     my ($file) = @_;
     my $contents;
@@ -33,7 +31,6 @@ sub get_infoHash {
     my $info_hash = Encode::encode( "ISO-8859-1", sha1( bencode( $infoKey )));
     return $info_hash;
 }
-
 
 sub main {
     my ($torrent_file) = @_;
@@ -98,10 +95,31 @@ sub main {
 
     local $/;
     my $buf;
+    my $bitfield;
+    my $choke;
+
     $fh->read($buf, length($message));
+    $fh->read($bitfield, $bitfield_num_bytes);
+
+    my ($pstr_r, $reserved_r, $info_hash_r, $peer_id_r, $c) = unpack 'C/a a8 a20 a20 a*', $buf;
+    my ($bitfield_length, $bitfield_id, $bitfield_data) = unpack 'N1 C1' . ' B' . $bitfields_num, $bitfield;
+
+    if( $info_hash eq $info_hash_r ) {
+        my $interested = pack('Nc', 1, 2);
+        my $choke_buf;
+
+        print $fh $interested;
+        $fh->read($choke_buf, 5);
+
+        my ($length, $id) = unpack 'Nc', $choke_buf;
+        if( $id == 1 ) {
+            print("\n got unchoke ", $length);
+        }
+    }
 
     use Data::Printer;
     p $buf;
+    p $bitfield;
     
 }
 
