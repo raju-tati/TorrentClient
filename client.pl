@@ -62,8 +62,11 @@ sub main {
       . $left;
 
 
+    my $response = get($tracker_request) or die "Cannot connect to tracker";
+    my $tracker_response = bdecode($response);
+
     use Data::Printer;
-    p $tracker_request;
+    p $tracker_response;
 }
 
 my $torrent_file = 'debian-11.6.0-amd64-netinst.iso.torrent';
